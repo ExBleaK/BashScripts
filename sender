@@ -1,0 +1,87 @@
+#!/bin/bash
+
+login='sender'
+password='test'
+
+url_ka_log='http://host/staffapi/index.php?/Core/Default/Login'
+url_ka_send='http://host/staffapi/index.php?/Tickets/Push/Index'
+url_ka_logout='http://host/staffapi/index.php?/Core/Default/Logout'
+
+tmp_path='./.temp'
+cookie_file='cookies-kayako'
+
+to='kidom@rootfest.net'
+subject='Subject ticket'
+sign='
+
+Regards,.
+Sender
+--------------------
+Our Facebook page: facebook.com/unihost
+Our Twitter page: twitter.com/unihost
+-------------------------------------------
+Abuse Department Unihost.com
+email: abuses@unihost.com'
+message='Message'$sign
+sender='unihost.com - Sender'
+department='4'
+owner='3'
+staffid='3'
+
+sesid=`wget --post-data "username=$login&password=$password" --save-cookies $tmp_path/$cookie_file --keep-session-cookies $url_ka_log --no-check-certificate --content-disposition -qO - | gzip -d | sed -n 's/.*<sessionid><\!\[CDATA\[\(.*\)\]\]><\/sessionid>.*/\1/p'`
+
+pay="<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<kayako_staffapi>
+<create staffapiid=\"0\">
+<subject>$subject</subject>
+<fullname>$sender</fullname>
+<email>$to</email>
+
+<!-- Begin Ticket Properties -->
+<departmentid>$department</departmentid>
+<ticketstatusid>1</ticketstatusid>
+<ticketpriorityid>1</ticketpriorityid>
+<tickettypeid>1</tickettypeid>
+<ownerstaffid>$owner</ownerstaffid>
+<emailqueueid>0</emailqueueid>
+
+<!-- Begin Creator Info -->
+<creator>staff</creator>
+<userid>0</userid>
+<staffid>$staffid</staffid>
+
+<!-- Begin Other Info -->
+<type>default</type>
+<phonenumber></phonenumber>
+<sendautoresponder>0</sendautoresponder>
+<flagtype>0</flagtype>
+
+<!-- Tags -->
+<tags></tags>
+<tags></tags>
+
+<!-- Recipients -->
+<ccto></ccto>
+<bccto></bccto>
+
+<!-- Due Timestamps -->
+<resolutiondue></resolutiondue>
+<replydue></replydue>
+
+<reply>
+<contents>$message</contents>
+</reply>
+<watch>0</watch>
+
+<note type=\"ticket\" notecolor=\"4\">
+      Почта клиента: $to
+      Сервер:.
+      Аккаунт:.
+</note>
+
+</create>
+</kayako_staffapi>"
+
+wget --post-data="payload=$pay" --load-cookies $tmp_path/$cookie_file $url_ka_send"&sessionid=$sesid" --content-disposition -qO - | > /dev/null
+
+wget --load-cookies $tmp_path/$cookie_file $url_ka_logout --content-disposition -qO - | > /dev/null

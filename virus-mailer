@@ -1,0 +1,68 @@
+#!/bin/bash
+#
+# !!!!!СКРИПТ ПОКА НЕ ЗАКОНЧЕН!!!!!
+#
+# Возможно расписать скрипт по кейсам (логин, поиск, отправка, выход).
+# Сдлеать чтобы первый входящий параметр был лог файлом кламскана. То есть чтобы не указывать жестко в скрипте.
+# Нужно изменить запись лога. Нужно сделать так чтобы он писал ласт лог и общий лог. Это нужно для того чтобы исключить проблему с повторением аккаунтов.
+# Попросить манагеров чтобы создали аккаунт в ВХМЦС, который будет имееть права только на просмотр услуги и информации о клиенте. Аккаунт нужен именно для этого скрипта.
+# Возможно создать аккаунт и в Каяке, для того чтобы отправка производилась от бота.
+# Возможно сделать проверку на активность аккаунта. В случае если он неактивен, то думаю что не имеет смысл отправлять оповещение о вирусах.
+# Относительно предыдущего пункта, добавить проверку статуса аккаунта как в ВХМЦС, так и через mgrctl.
+# В случае если будет сделана проверка и через mgrctl, и если скрипт заметит что есть различия статуса аккаунта (возможно сделать проверку также и на пакет услуги),
+#сделать соответствующую запитьс в лог и отследить её при помощи нагиос. То есть попробовать сделать так же как и с мониторингом бекапа (наличие определённого предложения в лог файле)
+#для хостинга.
+# Расписать более детальные логи. Попробовать отлавливать и записывать ошибки в лог файл для дальнейшего анализа.
+#
+
+login=''
+password=''
+
+url_wh_log='https://my..com/admin/dologin.php'
+url_wh_src='https://my..com/admin/search.php'
+tmp_path='./.temp'
+cookie_file='cookies-whmcs'
+login_file=`echo -n "$url_wh_log" | cut -d "/" -f 5`
+search_file=`echo -n "$url_wh_src" | cut -d "/" -f 5`
+
+ac_lst=$(cat clamscan_master038.log | grep '/var/backup_copy/' | cut -d '/' -f 6 | uniq) #Парсинг лог файла
+ac_num='1' #Временная переменная для тестового вывода
+
+
+#Цикл разбора лог файла и занесения в массив.
+for ac_name in $ac_lst; do
+    ac_mas[$i]=$ac_name
+    let "i+=1"
+done
+
+if [ "${ac_mas[$ac_num]}" != "" ]; then
+	echo ${ac_mas[$ac_num]}
+fi
+
+
+#Проверка существования файла авторизации. В этом файле храниться токен для осуществления поиска.
+if [ -f $tmp_path/$login_file ]; then
+	rm $tmp_path/$login_file
+fi
+
+#Проверка существования файла результата поиска.
+if [ -f $tmp_path/$search_file ]; then
+	rm $tmp_path/$search_file
+fi
+
+
+wget --post-data "username=$login&password=$password&rememberme=1" --save-cookies $tmp_path/$cookie_file --keep-session-cookies $url_wh_log --no-check-certificate --quiet -P $tmp_path #-O /dev/null #Авторизация и сохранение куки в файл.
+tok=$(cat $tmp_path/$login_file | grep '<input type="hidden" name="token"' | grep -v '<div id="mynotes">' | cut -d '"' -f 6) #Парсинг токена из файла. Токен нужен для выполнения поиска.
+wget --post-data "intellisearch=1&token=$tok&value=egorhost" --load-cookies $tmp_path/$cookie_file $url_wh_src --quiet --content-disposition -P $tmp_path #Запрос поиска в котором указываеться токен из команды выше и имя искомого аккаунта.
+
+cl_link=$(cat $tmp_path/$search_file | sed 's/></>\n</g' | grep 'href' | cut -d '"' -f 2) #Парсинг ссылки аккаунта из полученного ответа (файла) после поиска.
+cl_name_id=$(cat $tmp_path/$search_file | sed 's/></>\n</g' | sed 's/> </>\n</g' | grep '<span' | grep 'desc' | sed 's/<[^<]*>//g') #Парсинг имени и ID клиента из полученного ответа (файла) после поиска.
+cl_serv=$(cat $tmp_path/$search_file | sed 's/></>\n</g' | grep 'strong' | sed 's/> </>\n</g' | grep 'strong' | sed 's/<[^<]*>//g' | sed 's/ - /:/g') #Парсинг услуги из полученного ответа (файла) после поиска.
+cl_serv_st=$(cat $tmp_path/$search_file | sed 's/></>\n</g' | sed 's/> </>\n</g' | grep '<span' | grep 'label' | sed 's/<[^<]*>//g') #Парсинг статуса услуги из полученного ответа (файла) после поиска.
+
+echo $cl_link
+echo $cl_name_id
+echo $cl_serv
+echo $cl_serv_st
+
+wget https://my..com/admin/logout.php --load-cookies $tmp_path/$cookie_file --quiet -O /dev/null #Выход

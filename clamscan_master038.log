@@ -1,0 +1,29 @@
+-------------------------------------------------------------------------------
+
+/var/backup_copy/master0338/www/user1_4/data/www//userfiles/image/tj.jpg: PHP.Hide FOUND
+/var/backup_copy/master038/www/user6_4/data//wp-includes/js/tinymce/skins/wordpress/images/page.php: Php.Malware.Mailbot-1 FOUND
+
+----------- SCAN SUMMARY -----------
+Known viruses: 4090322
+Engine version: 0.98.7
+Scanned directories: 573367
+Scanned files: 4123774
+Infected files: 6
+Data scanned: 132623.73 MB
+Data read: 285430.32 MB (ratio 0.46:1)
+Time: 17700.852 sec (295 m 0 s)
+
+-------------------------------------------------------------------------------
+
+/var/backup_copy/master038/www/user1_3/data/www//userfiles/image/tj.jpg: PHP.Hide FOUND
+/var/backup_copy/master038/www/user2_3/data/www//gmfbmcq8.php: PHP.Trojan.Webshell-11 FOUND
+
+----------- SCAN SUMMARY -----------
+Known viruses: 4090322
+Engine version: 0.98.7
+Scanned directories: 573367
+Scanned files: 4123774
+Infected files: 6
+Data scanned: 132623.73 MB
+Data read: 285430.32 MB (ratio 0.46:1)
+Time: 17700.852 sec (295 m 0 s)
